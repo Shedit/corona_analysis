@@ -1,27 +1,81 @@
+#%%
 from API.call_functions import *
+from graph_functions import *
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 call = calls()
 
-data_json = call.historical("sweden")
+data_json = call.historical()
 
 data = pd.read_json(data_json)
 
-def lineplot(x_data, y_data, x_label="", y_label="", title=""):
-    # Create the plot object
-    _, ax = plt.subplots()
+#%%
+data['countryANDprovince'] = np.nan
+for i, content in enumerate(data['country']):
+    data['countryANDprovince'][i] = content
 
-    # Plot the best fit line, set the linewidth (lw), color and
-    # transparency (alpha) of the line
-    ax.plot(x_data, y_data, lw = 2, color = '#539caf', alpha = 1)
+for i, content in enumerate(data['province']):
+    if content == None:
+        pass 
+    else:
+        content = " " + content
+        data['countryANDprovince'][i] += content
 
-    # Label the axes and provide a title
-    ax.set_title(title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+del data['country']
+del data['province']
 
-    plt.show()
+#%%
+## get a data frame with timeseries having cases, deaths, recovered  
+for i, lists in enumerate(data['timeline']):
+    data['timeline'][i] = pd.DataFrame(lists)
 
-lineplot(list(data['timeline']['cases'].keys()), list(data['timeline']['cases'].values()))
+data = data[['countryANDprovince', 'timeline']]
+
+#%% 
+
+for i, content in enumerate(data['timeline']):
+    data['timeline'][i]['countrySegment'] = np.nan
+    data['timeline'][i]['countrySegment'] = data['countryANDprovince'][i]
+    data['timeline'][i].reset_index()
+
+
+#%%
+    df = pd.DataFrame()
+    for i, content in enumerate(data['timeline']):
+        df = df.append(data['timeline'][i])
+        print(i, "done")
+
+#%%
+
+#%%
+
+import plotly.express as px
+df2 = df.reset_index()
+
+df2 = df2.melt(id_vars=['index', 'countrySegment'], value_vars = ['cases', 'deaths', 'recovered'])
+#%%
+fig = px.line(df2, x='index', y='value', color='variable', hover_name='countrySegment')
+fig.show()
+
+# %%
+
+seperate_pull = data
+
+seperate_pull = seperate_pull.set_index('countryANDprovince', drop = True)
+
+can_on = pd.DataFrame(seperate_pull['timeline']['canada ontario'])
+
+# %%
+
+can_on = can_on.reset_index()
+
+can_on = can_on.melt(id_vars="index")
+#%%
+import plotly.express as px
+
+fig2 = px.line(can_on, x='index', y='value', color='variable')
+fig2.show()
+
+# %%
