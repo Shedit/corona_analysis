@@ -1,17 +1,37 @@
-import matplotlib.pyplot as plt 
+import os
+import requests
+import datetime as dt
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
+def px_line_plot(df, country):
+   
+    df = df.loc[df['country'] == country]
 
-def lineplot(x_data, y_data, x_label="", y_label="", title=""):
-    # Create the plot object
-    _, ax = plt.subplots()
+    fig = px.line(df, x='date', y = 'value', color='type', title = country )
 
-    # Plot the best fit line, set the linewidth (lw), color and
-    # transparency (alpha) of the line
-    ax.plot(x_data, y_data, lw = 2, color = '#539caf', alpha = 1)
+    return fig 
 
-    # Label the axes and provide a title
-    ax.set_title(title)
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
+def px_plot_hist(df):
 
-    plt.show()
+    yesterday = dt.date.today() - dt.timedelta(days=1)
+    yesterday = yesterday.strftime("%-m/%-d/%y")
+
+    cases = df[(df['date'] == yesterday) & (df['type'] == 'cases')]
+    deaths = df[(df['date'] == yesterday) & (df['type'] == 'deaths')]
+    
+
+    # fig = go.Figure(data=[
+    #     go.Bar(name='Deaths', x=x_all, y=deaths_values),
+    #     go.Bar(name='Cases', x=x_all, y=cases_values)
+    # ])
+    
+    # Change the bar mode
+    #fig.update_layout(barmode='stack')
+    
+    fig = px.bar(cases, x='country', y='value')
+    
+  
+
+    return fig

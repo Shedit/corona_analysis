@@ -5,11 +5,10 @@ import os
 class calls():
 
     def __init__(self):
-        self.URL = "https://corona.lmao.ninja"
+        self.URL = "https://corona.lmao.ninja/v2"
 
     def historical(self, country = ''):
-
-        URL = self.URL + "/historical"
+        URL = os.path.join(self.URL, "historical")
         
         if country == '':  
             r = requests.get(url = URL)
