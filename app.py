@@ -23,7 +23,7 @@ app = dash.Dash(
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 
-app.layout = html.Div(children=[
+app.layout = html.Div(style={'width': '75%', 'margin': '0 auto'}, children=[
     html.H1(children='COVID-19',
         style={
                 'textAlign': 'center'
@@ -36,7 +36,7 @@ app.layout = html.Div(children=[
            'textAlign': 'center'
             }),
 
-    html.Div(children=(
+    html.Div(children=[
    
     dcc.Graph(
         id='px-line-plot',
@@ -48,25 +48,39 @@ app.layout = html.Div(children=[
         id="drop",
         options=[{'label': i, 'value': i } \
                 for i in df_hist.loc[:, 'country'].unique()],
-                 value = 'canada ontario'
+                 value = 'canada ontario',
     )
-    )
+    ]
     ),
 
     html.Div(children= [
         dcc.Graph(
             id='hist-tot-cases-by-country',
             figure=px_plot_hist(df_hist)
+        ),
+
+        dcc.RadioItems(
+            id="radio",
+            options = [{'label': str(10**i), 'value': 10**i } \
+                    for i in range(0,5)],
+            value = 1, 
         )
+
     ])
 ])
-
 @app.callback(
     Output(component_id='px-line-plot', component_property='figure'),
-    [Input(component_id='drop', component_property='value')]
-)
+    [Input(component_id='drop', component_property='value')])
 def update_output_div(input_value):
     return px_line_plot(df_hist, input_value)
+
+@app.callback(
+    Output('hist-tot-cases-by-country', 'figure'),
+    [Input('radio', 'value')])
+def update_hist_div(value):
+    return px_plot_hist(df = df_hist, amount = value)
+
+
 # Run the server
 if __name__ == "__main__":
     app.run_server(debug=True)
