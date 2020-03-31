@@ -31,4 +31,9 @@ class calls():
         URL = self.URL + "/countries"
         r = requests.get(url = URL)
         return r.text
-        
+
+    def jhopkins(self): 
+
+        URL = self.URL + "/jhucsse"
+        r = requests.get( url = URL)
+        return r.text

@@ -34,7 +34,12 @@ class test_calls_class(unittest.TestCase):
         data = self.calls_object.countries()
 
         self.assertIs(type(data), type(''))
-         
+
+    def test_calls_jhopkins(self): 
+
+        data = self.calls_object.jhopkins()
+        self.assertIs(type(data), type(''))
+
 
 if __name__ == '__main__':
     unittest.main()

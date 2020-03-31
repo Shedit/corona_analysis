@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 
 call = calls()
+#%% 
+
 
 data_json = call.historical()
 
@@ -154,5 +156,81 @@ def tidy_historical(data):
     
     return df_tidy
 
+#%%
+
+df = call.jhopkins()
+
+df = pd.read_json(df)
+
+df = tidy_stats_jhopkins(df)
+
 # %%
-test = tidy_historical(data)
+
+a_gen = (df.loc[i, 'stats'] for i in df.index)
+b_gen = (i['confirmed'] for i in a_gen)
+sum(b_gen)
+
+
+# %%
+
+# %%
+count_sum_of_nested_dicts(df, col = 'stats', nestkey = 'recovered')
+
+# %%
+
+df = pd.read_json(call.historical())
+df = tidy_historical(df)
+
+sweden = df[(df['type'] == 'cases') & (df['country'] == 'sweden')]
+sweden = sweden.reset_index(drop = True)
+
+sweden['past'] = sweden['value']
+
+
+for i, c in sweden.iterrows():
+    
+    if( i == max(sweden.index)):
+        pass
+    else:     
+        sweden.loc[sweden.index[i+1],'past'] = c['past']
+
+
+sweden['diff'] = sweden['value'] - sweden['past']
+
+
+sweden['diff_other'] = sweden['diff']
+
+
+sweden['ratio'] = sweden['diff'] / sweden['past']
+sweden['ratio'] = sweden['ratio'].fillna(0)
+ 
+sweden['ratio'] = sweden['ratio'].replace(np.inf, 1) 
+sweden2 = sweden.loc[:, ['date', 'ratio']]
+
+sweden2
+
+# %%
+
+
+## Get growth ratio from a df 
+
+
+df = call.historical()
+
+df = pd.read_json(df)
+
+df = tidy_historical(df)
+
+df['past'] = np.nan
+
+for tupl in df.groupby('country'):
+    dframe = tupl[1]
+    dframe['past'] = dframe['value'].shift(1)
+    print(dframe.index)
+    print(dframe)
+    break
+    for j, c in dframe.iterrows(): 
+        print(j)
+        df.loc[df.index[j], 'past'] = c.loc['value ']
+
+# %%

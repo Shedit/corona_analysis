@@ -2,22 +2,56 @@ import os
 import requests
 import datetime as dt
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
 def px_line_plot(df, country):
    
     df = df.loc[df['country'] == country]
+    
+    numdays = 30 
+
+    base = dt.datetime.today()
+    date_list = [(base - dt.timedelta(days=x)).strftime("%-m/%-d/%y") for x in range(numdays)]
 
     fig = px.line(df, x='date', y = 'value', color='type', title = country )
 
+
     return fig 
 
-def px_plot_hist(df, amount = 1):
+def px_line_plot_ratio(df, country):
+    # It will return a line plot with graph stating a ratio of change to indicate growth
+    # Get all 'cases' rows for each country
+    # Count Difference for each executive day
+    # How much  growth as happened since last growth period?
+
+    df = get_growth_ratio(df, country = country)
+    growth_today = df['ratio'].tail(1).values 
+    
+    fig = go.Figure(
+        layout=go.Layout(
+        legend= { 'x': 1, 'y': 1, 'traceorder': 'normal'},
+        title=go.layout.Title(
+            text='Growth rate, today growth rate: {}'.format(growth_today)
+                )
+            )
+        )
+    fig.add_trace(go.Scatter(x=df.date, y=df.ratio,
+                    mode='lines+markers',
+                    name='Growth Ratio'))
+    fig.add_trace(go.Scatter(x=df.date, y=[0 for i in df.date],
+                    mode='lines',
+                    name=''))
+
+    return fig
+
+
+def px_plot_hist(df, amount = 10000):
 
     today = dt.date.today() 
     today = today.strftime("%-m/%-d/%y")
-
+    
     cases = df[(df['date'] == today) & (df['type'] == 'cases')]
     deaths = df[(df['date'] == today) & (df['type'] == 'deaths')]
     
@@ -27,8 +61,6 @@ def px_plot_hist(df, amount = 1):
         cases = df[(df['date'] == yesterday) & (df['type'] == 'cases')]
         deaths = df[(df['date'] == yesterday) & (df['type'] == 'deaths')]
 
-    #fig = px.bar(cases, x='country', y='value')
-    #condition = cases['value'] >= 10000
     
     cases = cases[cases['value'] >= amount]
     deaths = deaths[deaths['country'].isin(cases['country'])]
@@ -37,8 +69,115 @@ def px_plot_hist(df, amount = 1):
 
     fig.add_trace(go.Bar(x=deaths.country, y=deaths.value, name = 'Deaths'))
 
-    fig.update_layout(
-        barmode="overlay",
-        bargap=0.1)
+    fig.update_layout({
+        'barmode': 'overlay',
+        'bargap': 0.1,
+        })
 
     return fig
+
+def px_plot_hist_jhop(df, amount = 10000):
+
+    today = dt.date.today() 
+    today = today.strftime("%-m/%-d/%y")
+
+    cases = df[(df['type'] == 'confirmed')]
+    deaths = df[(df['type'] == 'deaths')]
+    recovered = df[(df['type'] == 'recovered')]
+    #fig = px.bar(cases, x='country', y='value')
+    #condition = cases['value'] >= 10000
+    
+    cases = cases[cases['value'] >= amount]
+    deaths = deaths[deaths['country'].isin(cases['country'])]
+    recovered = recovered[recovered['country'].isin(cases['country'])]
+    cases['sub_cases'] = cases['value'].values - (deaths['value'].values + recovered['value'].values)
+    
+    fig = go.Figure(
+        go.Bar(
+            x=deaths.country, y=deaths.value, name = 'Deaths', marker_color = 'red'
+        ),
+
+        layout_title_text = 'All countries with over {} cases'.format(amount),
+
+     )
+    fig.add_trace(
+        go.Bar(
+            x=recovered.country, y=recovered.value, name = 'Recovered', marker_color = 'green'
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=cases.country, y=cases.sub_cases, name = 'Cases', text=cases.value, marker_color = 'blue'
+        )
+    )
+
+    fig.update_layout({
+        'barmode': 'stack',
+        })
+
+    return fig
+
+def map_plot(df):
+    
+    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
+
+    fig = go.Figure(
+        data=go.Choropleth
+        (
+        locations = df['CODE'],
+        z = df['GDP (BILLIONS)'],
+        text = df['COUNTRY'],
+        colorscale = 'Blues',
+        autocolorscale=False,
+        reversescale=True,
+        marker_line_color='darkgray',
+        marker_line_width=0.5,
+        colorbar_tickprefix = '$',
+        colorbar_title = 'GDP<br>Billions US$',
+    )
+    )
+
+    fig.update_layout(
+        
+        title_text='2014 Global GDP',
+        geo=dict(
+            showframe=False,
+            showcoastlines=False,
+            projection_type='equirectangular'
+        ),
+        annotations = [dict(
+            x=0.55,
+            y=0.1,
+            xref='paper',
+            yref='paper',
+            text='Source: <a href="https://www.cia.gov/library/publications/the-world-factbook/fields/2195.html">\
+                CIA World Factbook</a>',
+            showarrow = False
+        )]
+    )
+
+    return fig 
+
+def get_growth_ratio(df, country = ''):
+
+    if country != '':
+        df = df[(df['type'] == 'cases') & (df['country'] == country)]
+        df = df.reset_index(drop = True)
+
+    df['past'] = df['value']
+
+    for i, c in df.iterrows():
+        
+        if( i == max(df.index)):
+            pass
+        else:     
+            df.loc[df.index[i+1],'past'] = c['past']
+
+    df['diff'] = df['value'] - df['past']
+
+    df['ratio'] = df['diff'] / df['past']
+
+    df['ratio'] = df['ratio'].fillna(0)
+    df['ratio'] = df['ratio'].replace(np.inf, 1)
+
+    return df
