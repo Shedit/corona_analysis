@@ -154,4 +154,4 @@ def update_output_div(input_value):
     return px_line_plot_ratio(df_hist, input_value).update_layout(graph_style)
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
