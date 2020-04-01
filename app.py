@@ -25,6 +25,7 @@ df_jhopkins['updatedAt'] = pd.to_datetime(df_jhopkins['updatedAt'])
 
 tidy_stats_jhop = tidy_stats_jhopkins(df_jhopkins)
 
+server = app.server 
 
 app = dash.Dash(
     __name__,
