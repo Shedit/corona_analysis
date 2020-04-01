@@ -25,13 +25,14 @@ df_jhopkins['updatedAt'] = pd.to_datetime(df_jhopkins['updatedAt'])
 
 tidy_stats_jhop = tidy_stats_jhopkins(df_jhopkins)
 
-server = app.server 
 
 app = dash.Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
     external_stylesheets=[dbc.themes.DARKLY]
 )
+
+server = app.server 
 
 colors = {
     'background': '#333',
