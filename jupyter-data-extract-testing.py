@@ -234,3 +234,86 @@ for tupl in df.groupby('country'):
         df.loc[df.index[j], 'past'] = c.loc['value ']
 
 # %%
+
+df = call.historical()
+
+df = pd.read_json(df)
+
+df = tidy_historical(df)
+
+test = df.loc[df['type'] == 'cases']
+
+test.loc[:, 'newCases'] = test.groupby('country')['value'].diff()
+
+# Getting largest values 
+grouped_test = test.groupby('country')
+
+# Get the latest value from date for each country 
+a_list = [i[1][i[1]['date'] == (dt.datetime.today() - dt.timedelta(days=1)).strftime("%-m/%-d/%y")] for i in grouped_test]
+
+testdf = pd.DataFrame()
+
+for i in a_list:
+    testdf = testdf.append(i)
+
+#Saving the names of the countires of the largest amount of cases
+
+largest_cases_array = testdf.nlargest(200, ['value'])['country'].values
+
+# Getting countries with the largest amount of cases 
+plot_df = test.loc[test['country'].isin(largest_cases_array)]
+
+# Getting all grouped dataframes 
+
+b_list = [i for i in plot_df.groupby('country')]
+
+newdf = pd.DataFrame()
+
+for i, df in b_list:
+    df = df.reset_index(drop = True)
+    df.loc[:, 'newCases'] = df['newCases'].rolling(window=3).mean()
+    #df = df.fillna(df.loc[df.index[2], 'newCases'])
+
+    newdf = newdf.append(df)
+
+
+fig = px.line(newdf, x='value', y='newCases', color='continent', log_x= True, log_y= True, hover_name='country')
+
+fig.show()
+
+# %%
+fig = go.Figure()
+
+
+c_gen = (i for i in newdf.groupby('country')
+
+for df in c_gen: 
+    fig.add_trace(
+        go.Scatter(
+            x=df.
+        )
+    )
+
+#%% 
+df = call.historical()
+
+df = pd.read_json(df)
+
+df = tidy_historical(df)
+
+
+
+# %%
+test = df.loc[(df['type'] == 'cases')]
+
+test.loc[:, 'newCases'] = test.groupby('country')['value'].diff()
+test.loc[:, 'newCases'] = test.loc[:, 'newCases'].rolling(window = 2 ).mean()
+#test.loc[:, 'newCases'] = test.loc[:, 'newCases'].fillna(0)
+
+fig = px.line(test, x='value', y='newCases', color='country', log_x= True, log_y= True, hover_name = 'country')
+
+fig.update_layout(showlegend=False)
+
+fig.show()
+
+# %%

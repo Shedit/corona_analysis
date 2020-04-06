@@ -3,6 +3,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, ClientsideFunction
 import dash_bootstrap_components as dbc
+import datetime as dt
+import time
+
 
 from graph_functions import * 
 from cleaning_functions import *
@@ -11,20 +14,27 @@ from API.call_functions import *
 # Data Imports 
 
 API = calls()
+df_hist = pd.DataFrame()
+df_jhopkins = pd.DataFrame()
+tidy_stats_jhop = pd.DataFrame()
 
-data_hist_json = API.historical()
+def data_imports():
 
-df_hist = pd.read_json(data_hist_json)
+    global df_hist
+    global tidy_stats_jhop
+    global df_jhopkins
 
-df_hist = tidy_historical(df_hist)
+    data_hist_json = API.historical()
+    df_hist = pd.read_json(data_hist_json)
+    df_hist = tidy_historical(df_hist)
 
-data_jhopkins_json = API.jhopkins()
+    data_jhopkins_json = API.jhopkins()
+    df_jhopkins = pd.read_json(data_jhopkins_json)
+    df_jhopkins['updatedAt'] = pd.to_datetime(df_jhopkins['updatedAt'])
 
-df_jhopkins = pd.read_json(data_jhopkins_json)
-df_jhopkins['updatedAt'] = pd.to_datetime(df_jhopkins['updatedAt'])
+    tidy_stats_jhop = tidy_stats_jhopkins(df_jhopkins)
 
-tidy_stats_jhop = tidy_stats_jhopkins(df_jhopkins)
-
+data_imports()
 
 app = dash.Dash(
     __name__,
@@ -69,7 +79,7 @@ dbc.Container(
                 html.P('Total amount of Recovered cases: {}'.format(count_sum_of_nested_dicts(df_jhopkins, 'stats', 'recovered')), className ="text-success"),
                 html.P('Last updated: {}'.format(max(df_jhopkins['updatedAt']))),
             ],
-            style = { 'text-align': 'center'}
+            style = { 'testAlign': 'center'}
             ),
 ################################################## BAR-GRAPH            
             html.Div(children= [
@@ -85,9 +95,32 @@ dbc.Container(
                     value = 10000, 
                 )
             ]),
+##################################################### LOG-TREND-GRAPH 
+            html.Div(children= [
+                dcc.Graph(
+                    id='log-trend',
+                    figure= log_trend_all(df_hist, 25).update_layout(graph_style)
+                ),
+            ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
-            dbc.Card(
                 html.Div(children=[
+                    
+                    html.Div(children = [
+                            dcc.Dropdown(
+                                id="drop",
+                                options=[{'label': i, 'value': i } \
+                                        for i in df_hist.loc[:, 'country'].unique()],
+                                        value = 'Canada ontario',
+                                        style=dict(
+                                            width='40%',
+                                            display='inline-block',
+                                            verticalAlign="middle",
+                                            color= colors['text'],
+                                            bgcolor = colors['background']
+                                        )
+                        )
+                    ]),
+
                     html.Div(children = [
                         dcc.Graph(
                             id='px-line-plot',
@@ -105,24 +138,7 @@ dbc.Container(
                     ],
                     style={'width': '50%', 'float': 'right', 'display': 'inline-block'}
                     ),
-
-                    html.Div(children = [
-                            dcc.Dropdown(
-                                id="drop",
-                                options=[{'label': i, 'value': i } \
-                                        for i in df_hist.loc[:, 'country'].unique()],
-                                        value = 'Canada ontario',
-                                        style=dict(
-                                            width='40%',
-                                            display='inline-block',
-                                            verticalAlign="middle",
-                                            color= colors['text'],
-                                            bgcolor = colors['background']
-                                        )
-                        )
-                    ]),
-                ])                       
-            ),
+                ]),                       
 
             html.Div(children = [
 
@@ -156,4 +172,5 @@ def update_output_div(input_value):
     return px_line_plot_ratio(df_hist, input_value).update_layout(graph_style)
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
+
