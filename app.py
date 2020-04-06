@@ -17,6 +17,13 @@ API = calls()
 df_hist = pd.DataFrame()
 df_jhopkins = pd.DataFrame()
 tidy_stats_jhop = pd.DataFrame()
+total_stats = pd.DataFrame()
+
+def total_import():
+    global total_stats
+    total_stats = API.all()
+
+total_import()
 
 def data_imports():
 
@@ -64,22 +71,33 @@ dbc.Container(
             children=[
             html.H1(children='COVID-19',
                 style={
-                        'textAlign': 'center'
+                        'test-align': 'center'
                     }),
 
             html.Div(children=
                 html.H3('A presentation of data related to COVID-19.'),
             style={
-                'textAlign': 'center'
+                'test-align': 'center'
                     }),
             
+            dbc.Container(
+                dbc.CardColumns(
+                    html.Div(children =[
+                        dbc.Card(
+                            dbc.CardBody(
+                                html.P(
+                                        '{} : {}'.format(i,j), className='card-text', id = i   
+                                )
+                            ), color = 'secondary'
+                        )
+                    for i, j in total_stats.items() if i != 'updated'])    
+                )
+            ),
+
             html.Div(children = [
-                html.P('\nTotal amount of Cases: {}'.format(count_sum_of_nested_dicts(df_jhopkins, 'stats', 'confirmed')), className ="text-warning"),
-                html.P('Total amount of Deaths: {}'.format(count_sum_of_nested_dicts(df_jhopkins, 'stats', 'deaths')), className ="text-danger"),
-                html.P('Total amount of Recovered cases: {}'.format(count_sum_of_nested_dicts(df_jhopkins, 'stats', 'recovered')), className ="text-success"),
-                html.P('Last updated: {}'.format(max(df_jhopkins['updatedAt']))),
-            ],
-            style = { 'testAlign': 'center'}
+                html.P('Data last updated {}'.format(time.gmtime(total_stats['updated'])))
+                ],
+                style = { 'text-align': 'center'}
             ),
 ################################################## BAR-GRAPH            
             html.Div(children= [
@@ -99,7 +117,7 @@ dbc.Container(
             html.Div(children= [
                 dcc.Graph(
                     id='log-trend',
-                    figure= log_trend_all(df_hist, 25).update_layout(graph_style)
+                    figure= log_trend_all(df_hist, 15).update_layout(graph_style)
                 ),
             ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
@@ -170,7 +188,8 @@ def update_output_div(input_value):
     [Input(component_id='drop', component_property='value')])
 def update_output_div(input_value):
     return px_line_plot_ratio(df_hist, input_value).update_layout(graph_style)
+
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
 

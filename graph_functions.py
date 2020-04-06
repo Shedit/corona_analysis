@@ -27,6 +27,7 @@ def px_line_plot_ratio(df, country):
     # How much  growth as happened since last growth period?
 
     df = get_growth_ratio(df, country = country)
+  
     growth_today = df['ratio'].tail(1).values 
     
     fig = go.Figure(
@@ -221,6 +222,28 @@ def log_trend_all(df, toplimit = 100):
 
     newdf = newdf.reset_index(drop = True)
 
-    fig = px.line(newdf, x='value', y='newCases', color='continent', log_x= True, log_y= True, hover_name='country')
+    #fig = px.line(newdf, x='value', y='newCases', color='continent', log_x= True, log_y= True, hover_name='country')
+
+    fig = go.Figure()
+
+    for data in newdf.groupby('country'):
+        fig.add_trace(
+            go.Scatter(
+                x=data[1].value, y=data[1].newCases, mode='lines', line= {'width': 1, 'shape': 'spline'}, name=data[1].country.unique()[0]
+            )
+        )
+        fig.add_annotation(
+            x=data[1].value.values[-1],
+            y=data[1].newCases.values[-1],
+            text= data[1].country.unique()[0]
+            )
+
+    fig.update_xaxes(type="log")
+    fig.update_yaxes(type="log")
+    fig.update_layout(title="Top {} countries' exponential growth by most confirmed cases".format(toplimit))
     
+    # fig.update_traces(marker=dict(size=2,
+    #                           line=dict(width=2,
+    #                                     color='DarkSlateGrey')),
+    #               selector=dict(mode='lines+markers'))
     return fig
