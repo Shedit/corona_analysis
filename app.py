@@ -63,6 +63,8 @@ graph_style = {
             'font': {'color': colors['text']}
             }
 
+config = {'scrollZoom': True}
+
 app.layout = \
 dbc.Container(
     html.Div(
@@ -85,17 +87,20 @@ dbc.Container(
                     html.Div(children =[
                         dbc.Card(
                             dbc.CardBody(
-                                html.P(
-                                        '{} : {}'.format(i,j), className='card-text', id = i   
-                                )
+                                [html.Header('{}'.format(i)),       
+                                    html.P(
+                                            '{}'.format(j), className='card-text', id = i   
+                                    )]
+                                
                             ), color = 'secondary'
                         )
-                    for i, j in total_stats.items() if i != 'updated'])    
+                    for i, j in total_stats.items() if i not in ['updated', 'deathsPerOneMillion', 'deathsPerOneMillion', 'casesPerOneMillion', 'testsPerOneMillion']],
+                    )    
                 )
             ),
 
             html.Div(children = [
-                html.P('Data last updated {}'.format(time.gmtime(total_stats['updated'])))
+                html.P('Data last updated {}'.format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(total_stats['updated']/1000))))
                 ],
                 style = { 'text-align': 'center'}
             ),
@@ -122,20 +127,18 @@ dbc.Container(
             ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
                 html.Div(children=[
-                    
                     html.Div(children = [
                             dcc.Dropdown(
                                 id="drop",
                                 options=[{'label': i, 'value': i } \
                                         for i in df_hist.loc[:, 'country'].unique()],
                                         value = 'Canada ontario',
-                                        style=dict(
-                                            width='40%',
-                                            display='inline-block',
-                                            verticalAlign="middle",
-                                            color= colors['text'],
-                                            bgcolor = colors['background']
-                                        )
+                                        style={
+                                            'width':'40%',
+                                            'display':'inline-block',
+                                            'verticalAlign':"middle",
+                                            'background': colors['background']
+                                        }
                         )
                     ]),
 

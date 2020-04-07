@@ -1,10 +1,38 @@
 body { 
-    color: '#7FDBFF', 
+    color: #7FDBFF!important;
+    text-align: center;
 }
 
-#cases {
-    backgroundcolor: '#F39C12'
+#critical {
+    color: #F39C12;
+}
+
+#recovered {
+    color: rgb(110, 228, 110);
+} 
+
+#deaths, #todayDeaths {
+    color: rgb(238, 96, 78);
+}
+#active {
+    color : rgb(232, 235, 77);
+}
+#drop {
+    color: #7FDBFF;
+}
+ul.dropdown-menu {
+    background-color: #333;
+}
+.has-value.Select--single>.Select-control .Select-value .Select-value-label, .has-value.is-pseudo-focused.Select--single>.Select-control .Select-value .Select-value-label{
+    color: #7FDBFF;
 }
 
 
+.Select-control {
+    width: 100%!important;
+}
 
+
+.Select-menu-outer {
+    background: #333;
+}
