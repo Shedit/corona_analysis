@@ -232,12 +232,6 @@ def log_trend_all(df, toplimit = 100):
                 x=data[1].value, y=data[1].newCases, mode='lines', line= {'width': 1, 'shape': 'spline'}, name=data[1].country.unique()[0]
             )
         )
-        fig.add_annotation(
-            x=data[1].value.values[-1],
-            y=data[1].newCases.values[-1],
-            text= data[1].country.unique()[0]
-            )
-        fig.update_traces(textposition='top center')
 
 
     fig.update_xaxes(type="log")
