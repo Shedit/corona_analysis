@@ -295,22 +295,31 @@ for df in c_gen:
     )
 
 #%% 
+
+from API.call_functions import *
+from graph_functions import *
+from cleaning_functions import *
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+call = calls()
+
 df = call.historical()
 
 df = pd.read_json(df)
 
 df = tidy_historical(df)
 
-
-
-# %%
 test = df.loc[(df['type'] == 'cases')]
 
 test.loc[:, 'newCases'] = test.groupby('country')['value'].diff()
 test.loc[:, 'newCases'] = test.loc[:, 'newCases'].rolling(window = 2 ).mean()
-#test.loc[:, 'newCases'] = test.loc[:, 'newCases'].fillna(0)
+test.loc[:, 'newCases'] = test.loc[:, 'newCases'].fillna(test.loc[test.index[2], 'newCases'])
 
-fig = px.line(test, x='value', y='newCases', color='country', log_x= True, log_y= True, hover_name = 'country')
+
+fig = px.line(test, x='value', y='newCases', color='continent', log_x= True, log_y= True, hover_name = 'country', animation_frame='date', animation_group='country', range_x=[100,100000], range_y=[100,100000])
 
 fig.update_layout(showlegend=False)
 

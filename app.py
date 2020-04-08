@@ -53,17 +53,16 @@ server = app.server
 
 colors = {
     'background': '#333',
-    'text': '#7FDBFF'
+    'text': '#7FDBFF',
+    'paper': '#333'
 }
 
 graph_style = {
             'legend': { 'x': 0, 'y': 1},
             'plot_bgcolor': colors['background'],
-            'paper_bgcolor': colors['background'],
+            'paper_bgcolor': colors['paper'],
             'font': {'color': colors['text']}
             }
-
-config = {'scrollZoom': True}
 
 app.layout = \
 dbc.Container(
@@ -122,7 +121,7 @@ dbc.Container(
             html.Div(children= [
                 dcc.Graph(
                     id='log-trend',
-                    figure= log_trend_all(df_hist, 15).update_layout(graph_style)
+                    figure= log_trend_all(df_hist, 15).update_layout(graph_style, showlegend = False)
                 ),
             ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
@@ -140,33 +139,36 @@ dbc.Container(
                                             'background': colors['background']
                                         }
                         )
-                    ]),
-
-                    html.Div(children = [
-                        dcc.Graph(
-                            id='px-line-plot',
-                            figure= px_line_plot(df_hist, 'Canada ontario').update_layout(graph_style),     
-                        ),
-                    ],
-                    style={'width': '50%', 'display': 'inline-block'}
-                    ),
-
-                    html.Div(children= [
-                            dcc.Graph(
-                                id='px-line-plot-ratio',
-                                figure= px_line_plot_ratio(df_hist, 'Canada ontario').update_layout(graph_style)
-                            )
-                    ],
-                    style={'width': '50%', 'float': 'right', 'display': 'inline-block'}
-                    ),
-                ]),                       
-
+                    ])
+                ]),    
+###################################################### Line plots per country                    
+                dbc.Container(
+                    dbc.Row([
+                        dbc.Col(
+                            html.Div(children = [
+                                dcc.Graph(
+                                    id='px-line-plot',
+                                    figure= px_line_plot(df_hist, 'Canada ontario').update_layout(graph_style),     
+                                )]
+                            ),
+                        className="md-6"
+                        ), 
+                        dbc.Col(
+                            html.Div(children= [
+                                dcc.Graph(
+                                    id='px-line-plot-ratio',
+                                    figure= px_line_plot_ratio(df_hist, 'Canada ontario').update_layout(graph_style)
+                                )]
+                            ),
+                        className="md-6"
+                        )
+                    ])
+                ),
             html.Div(children = [
-
-                # dcc.Graph(
-                #     id='map-plot',
-                #     figure = map_plot(df_jhopkins)
-                # )
+                    dcc.Markdown('''
+                    ##### Sources
+                    Data supported from https://github.com/novelcovid/api
+                    ''', style={'text-align':'left'})
             ]),
         ])
     ])
@@ -194,5 +196,5 @@ def update_output_div(input_value):
 
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
 

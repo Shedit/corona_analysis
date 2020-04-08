@@ -237,13 +237,11 @@ def log_trend_all(df, toplimit = 100):
             y=data[1].newCases.values[-1],
             text= data[1].country.unique()[0]
             )
+        fig.update_traces(textposition='top center')
+
 
     fig.update_xaxes(type="log")
     fig.update_yaxes(type="log")
     fig.update_layout(title="Top {} countries' exponential growth by most confirmed cases".format(toplimit))
     
-    # fig.update_traces(marker=dict(size=2,
-    #                           line=dict(width=2,
-    #                                     color='DarkSlateGrey')),
-    #               selector=dict(mode='lines+markers'))
     return fig

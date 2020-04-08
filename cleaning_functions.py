@@ -75,3 +75,16 @@ def melted_growth_ratio(df):
     # expects tidy historical
     return
 
+def get_cases_by_continent(df):
+
+    df = df.loc[(df['type']== 'cases')]
+
+    df = df.groupby('country')
+
+    list_a = [(j.loc[j.index[-1], 'continent'], j.loc[j.index[-1], 'value']) for i, j in df]
+  
+    df = pd.DataFrame(list_a, columns = ['continent', 'value'])
+
+    df = df.groupby('continent').sum()
+
+    return df
