@@ -49,7 +49,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.DARKLY]
 )
 
-server = app.server 
+server = app.server
 
 colors = {
     'background': '#333',

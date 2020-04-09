@@ -55,7 +55,7 @@ def px_plot_hist(df, amount = 10000):
     today = dt.date.today() 
     today = today.strftime("%-m/%-d/%y")
     
-    cases = df[(df['date'] == today) & (df['type'] == 'cases')]
+    cases = df[(df['date'] == today) & (df['type'] == 'active')]
     deaths = df[(df['date'] == today) & (df['type'] == 'deaths')]
     
     if (cases['value'].count() < 10):
@@ -89,7 +89,7 @@ def px_plot_hist_jhop(df, amount = 10000):
     recovered = df[(df['type'] == 'recovered')]
     #fig = px.bar(cases, x='country', y='value')
     #condition = cases['value'] >= 10000
-    
+
     cases = cases[cases['value'] >= amount]
     deaths = deaths[deaths['country'].isin(cases['country'])]
     recovered = recovered[recovered['country'].isin(cases['country'])]
@@ -110,7 +110,7 @@ def px_plot_hist_jhop(df, amount = 10000):
     )
     fig.add_trace(
         go.Bar(
-            x=cases.country, y=cases.sub_cases, name = 'Cases', text=cases.value, marker_color = 'blue'
+            x=cases.country, y=cases.value, name = 'Cases', text=cases.value, marker_color = 'blue'
         )
     )
 
