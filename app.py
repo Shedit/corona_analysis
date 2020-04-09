@@ -80,7 +80,12 @@ dbc.Container(
             style={
                 'test-align': 'center'
                     }),
-            
+            dbc.Container(
+                dcc.Graph(
+                    id='sunburst',
+                    figure = sunburst_plot().update_layout(graph_style)
+                )
+            ),
             dbc.Container(
                 dbc.CardColumns(
                     html.Div(children =[

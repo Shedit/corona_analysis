@@ -46,8 +46,8 @@ Central African Republic,CAF,140,Middle Africa,Sub-Saharan Africa,Africa
 Chad,TCD,148,Middle Africa,Sub-Saharan Africa,Africa
 Chile,CHL,152,South America,Latin America and the Caribbean,South America
 China,CHN,156,Eastern Asia,,Asia
-"China, Hong Kong Special Administrative Region",HKG,344,Eastern Asia,,Asia
-"China, Macao Special Administrative Region",MAC,446,Eastern Asia,,Asia
+Hong Kong,HKG,344,Eastern Asia,,Asia
+Macao,MAC,446,Eastern Asia,,Asia
 Christmas Island,CXR,162,Australia and New Zealand,,Oceania
 Cocos (Keeling) Islands,CCK,166,Australia and New Zealand,,Oceania
 Colombia,COL,170,South America,Latin America and the Caribbean,South America
@@ -178,7 +178,7 @@ Poland,POL,616,Eastern Europe,,Europe
 Portugal,PRT,620,Southern Europe,,Europe
 Puerto Rico,PRI,630,Caribbean,Latin America and the Caribbean,North America
 Qatar,QAT,634,Western Asia,,Asia
-S.Korea,KOR,410,Eastern Asia,,Asia
+S. Korea,KOR,410,Eastern Asia,,Asia
 Moldova,MDA,498,Eastern Europe,,Europe
 Réunion,REU,638,Eastern Africa,Sub-Saharan Africa,Africa
 Romania,ROU,642,Eastern Europe,,Europe

@@ -59,7 +59,6 @@ def add_country_data(df):
 
     df2 = pd.read_csv('data/all_countries_by_continent.csv')
     df2.columns = [i.lower() for i in df2.columns.values]
-    #df2 = df2.loc[df2['country or area'].isin(df['country'])]
     merged = pd.merge(df, df2, left_on= 'country', right_on='country or area')
     merged = merged.dropna(how='any', subset=['timeline'])
     return merged

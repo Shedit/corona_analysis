@@ -1,5 +1,7 @@
 import os
 import requests
+import asyncio
+import corona_api as cor
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -238,4 +240,41 @@ def log_trend_all(df, toplimit = 100):
     fig.update_yaxes(type="log")
     fig.update_layout(title="Top {} countries' exponential growth by most confirmed cases".format(toplimit))
     
+    return fig
+
+def sunburst_plot():
+
+    async def get_country():
+
+        client = cor.Client()
+
+        obj = await (client.get_all_countries())
+        
+        await client.request_client.session.close()
+
+        return obj
+
+
+    data_list = asyncio.run(get_country())
+
+    df = pd.DataFrame([(i.__dict__) for i in data_list])
+
+    df['iso3'] = pd.DataFrame([i.info.iso3 for i in data_list])
+
+    df2 = pd.read_csv('data/all_countries_by_continent.csv')
+    df2.columns = df2.columns = [i.lower() for i in df2.columns.values]
+
+    df = pd.merge(df, df2, left_on='iso3', right_on='iso-alpha3 code', how='outer')
+    df = df.loc[df['cases'] >= 10000]
+    country_is_null_in_df2 = df[pd.isnull(df['country or area'])]['name']
+    country_is_null_in_df = df[pd.isnull(df['name'])]['country or area']
+
+    df = df.dropna(how='any', subset= ['name', 'country or area'])
+
+    df = df.loc[:, ['continent','name', 'active', 'recoveries','deaths']]
+
+    sunburst = df.melt(id_vars=(['continent', 'name']))
+
+    fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='value')
+    fig.update_layout(title='Countries over 10000 cases')
     return fig

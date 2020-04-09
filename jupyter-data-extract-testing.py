@@ -326,3 +326,31 @@ fig.update_layout(showlegend=False)
 fig.show()
 
 # %%
+###### Sunburst 
+from API.call_functions import *
+from graph_functions import *
+from cleaning_functions import *
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+call = calls()
+
+df = call.all()
+
+df = pd.read_json(df)
+
+#%% 
+
+import corona_api as cor
+import asyncio
+#$$ 
+client = cor.Client()
+
+asyncio.run(client.get_all_countries())
+
+
+
+
+
+# %%
