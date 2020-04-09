@@ -54,13 +54,21 @@ server = app.server
 colors = {
     'background': '#333',
     'text': '#7FDBFF',
-    'paper': '#333'
+    'paper': '#333',
+    'sun': '#222'
 }
 
 graph_style = {
             'legend': { 'x': 0, 'y': 1},
             'plot_bgcolor': colors['background'],
             'paper_bgcolor': colors['paper'],
+            'font': {'color': colors['text']}
+            }
+
+sun_style = {
+            'legend': { 'x': 0, 'y': 1},
+            'plot_bgcolor': colors['sun'],
+            'paper_bgcolor': colors['sun'],
             'font': {'color': colors['text']}
             }
 
@@ -83,7 +91,7 @@ dbc.Container(
             dbc.Container(
                 dcc.Graph(
                     id='sunburst',
-                    figure = sunburst_plot().update_layout(graph_style)
+                    figure = sunburst_plot().update_layout(sun_style)
                 )
             ),
             dbc.Container(

@@ -265,16 +265,17 @@ def sunburst_plot():
     df2.columns = df2.columns = [i.lower() for i in df2.columns.values]
 
     df = pd.merge(df, df2, left_on='iso3', right_on='iso-alpha3 code', how='outer')
-    df = df.loc[df['cases'] >= 10000]
     country_is_null_in_df2 = df[pd.isnull(df['country or area'])]['name']
     country_is_null_in_df = df[pd.isnull(df['name'])]['country or area']
 
     df = df.dropna(how='any', subset= ['name', 'country or area'])
 
+    df = df.loc[df['cases'] >= 5000]
+    # make other countries below 5000 cases other, sorted by continent
     df = df.loc[:, ['continent','name', 'active', 'recoveries','deaths']]
 
     sunburst = df.melt(id_vars=(['continent', 'name']))
 
     fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='value')
-    fig.update_layout(title='Countries over 10000 cases')
+    fig.update_layout(title='Countries over 5000 cases')
     return fig
