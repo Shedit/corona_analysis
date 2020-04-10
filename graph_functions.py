@@ -244,18 +244,20 @@ def log_trend_all(df, toplimit = 100):
 
 def sunburst_plot():
 
-    def get_country():
+    async def get_country():
 
         client = cor.Client()
 
-        obj = await (client.get_all_countries())
+        obj = await client.get_all_countries()
         
         await client.request_client.session.close()
 
         return obj
-
-
-    data_list = get_country()
+    coro = get_country()
+    task = asyncio.ensure_future(coro)
+    loop = asyncio.get_event_loop()
+    data_list = loop.run_until_complete(task)
+    loop.close()
 
     df = pd.DataFrame([(i.__dict__) for i in data_list])
 
