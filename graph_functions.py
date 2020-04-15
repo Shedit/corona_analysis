@@ -50,115 +50,66 @@ def px_line_plot_ratio(df, country):
     return fig
 
 
-def px_plot_hist(df, amount = 10000):
-
-    today = dt.date.today() 
-    today = today.strftime("%-m/%-d/%y")
-    
-    cases = df[(df['date'] == today) & (df['type'] == 'active')]
-    deaths = df[(df['date'] == today) & (df['type'] == 'deaths')]
-    
-    if (cases['value'].count() < 10):
-        yesterday = dt.date.today() - dt.timedelta(days=1)
-        yesterday = yesterday.strftime("%-m/%-d/%y")
-        cases = df[(df['date'] == yesterday) & (df['type'] == 'cases')]
-        deaths = df[(df['date'] == yesterday) & (df['type'] == 'deaths')]
-
-    
-    cases = cases[cases['value'] >= amount]
-    deaths = deaths[deaths['country'].isin(cases['country'])]
-
-    fig = px.bar(cases, x='country', y='value', title = 'All countries with over {} cases'.format(amount))
-
-    fig.add_trace(go.Bar(x=deaths.country, y=deaths.value, name = 'Deaths'))
-
-    fig.update_layout({
-        'barmode': 'overlay',
-        'bargap': 0.1,
-        })
-
-    return fig
-
 def px_plot_hist_jhop(df, amount = 10000):
+    # Main purpose of function: Return a bar plot with the specified data. 
 
-    today = dt.date.today() 
-    today = today.strftime("%-m/%-d/%y")
+    ## Inner helper functions
 
-    cases = df[(df['type'] == 'confirmed')]
-    deaths = df[(df['type'] == 'deaths')]
-    recovered = df[(df['type'] == 'recovered')]
-    #fig = px.bar(cases, x='country', y='value')
-    #condition = cases['value'] >= 10000
-
-    cases = cases[cases['value'] >= amount]
-    deaths = deaths[deaths['country'].isin(cases['country'])]
-    recovered = recovered[recovered['country'].isin(cases['country'])]
-    cases['sub_cases'] = cases['value'].values - (deaths['value'].values + recovered['value'].values)
+    def _get_df_by_type(_type):
     
-    fig = go.Figure(
-        go.Bar(
-            x=deaths.country, y=deaths.value, name = 'Deaths', marker_color = 'red'
-        ),
+        nonlocal df 
 
-        layout_title_text = 'All countries with over {} cases'.format(amount),
+        _df = df[(df['type'] == _type)]
+        
+        return _df 
 
-     )
-    fig.add_trace(
-        go.Bar(
-            x=recovered.country, y=recovered.value, name = 'Recovered', marker_color = 'green'
+    def _sort_by_amount_cases(_int):
+
+        nonlocal cases
+        nonlocal deaths 
+        nonlocal recovered 
+
+        _cases = cases[(cases['value'] >= _int)]
+        _deaths = deaths[deaths['country'].isin(_cases['country'])]
+        _recovered = recovered[recovered['country'].isin(_cases['country'])]
+
+        return _cases, _deaths, _recovered
+
+    def _add_bar_trace(_x, _y, _name, _color): 
+        
+        nonlocal fig
+        
+        fig.add_trace(
+            go.Bar(
+                x=_x, y=_y, name = _name, marker_color = _color
+            )
         )
-    )
-    fig.add_trace(
-        go.Bar(
-            x=cases.country, y=cases.value, name = 'Cases', text=cases.value, marker_color = 'blue'
-        )
-    )
+
+    ###### Outer function
+
+    cases = _get_df_by_type('confirmed')
+    deaths = _get_df_by_type('deaths')
+    recovered = _get_df_by_type('recovered')
+    
+    cases, deaths, recovered = _sort_by_amount_cases(amount)
+
+    cases['active_cases'] = cases['value'].values - (deaths['value'].values + recovered['value'].values)
+    
+    fig = go.Figure()
+    
+    _add_bar_trace(deaths.country, deaths.value, 'Deaths', 'red')
+    _add_bar_trace(recovered.country, recovered.value, 'Recovered', 'green')
+    _add_bar_trace(cases.country, cases.active_cases, 'Cases', 'blue')
 
     fig.update_layout({
-        'barmode': 'stack',
+        'barmode': 'relative',
         })
 
     return fig
 
 def map_plot(df):
-    
-    df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
 
-    fig = go.Figure(
-        data=go.Choropleth
-        (
-        locations = df['CODE'],
-        z = df['GDP (BILLIONS)'],
-        text = df['COUNTRY'],
-        colorscale = 'Blues',
-        autocolorscale=False,
-        reversescale=True,
-        marker_line_color='darkgray',
-        marker_line_width=0.5,
-        colorbar_tickprefix = '$',
-        colorbar_title = 'GDP<br>Billions US$',
-    )
-    )
-
-    fig.update_layout(
-        
-        title_text='2014 Global GDP',
-        geo=dict(
-            showframe=False,
-            showcoastlines=False,
-            projection_type='equirectangular'
-        ),
-        annotations = [dict(
-            x=0.55,
-            y=0.1,
-            xref='paper',
-            yref='paper',
-            text='Source: <a href="https://www.cia.gov/library/publications/the-world-factbook/fields/2195.html">\
-                CIA World Factbook</a>',
-            showarrow = False
-        )]
-    )
-
+    fig = None
     return fig 
 
 def get_growth_ratio(df, country = ''):
@@ -235,7 +186,6 @@ def log_trend_all(df, toplimit = 100):
             )
         )
 
-
     fig.update_xaxes(type="log")
     fig.update_yaxes(type="log")
     fig.update_layout(title="Top {} countries' exponential growth by most confirmed cases".format(toplimit))
@@ -244,7 +194,7 @@ def log_trend_all(df, toplimit = 100):
 
 def sunburst_plot():
 
-    async def get_country():
+    async def _get_country():
 
         client = cor.Client()
 
@@ -253,31 +203,147 @@ def sunburst_plot():
         await client.request_client.session.close()
 
         return obj
-    coro = get_country()
-    task = asyncio.ensure_future(coro)
-    loop = asyncio.get_event_loop()
-    data_list = loop.run_until_complete(task)
-    loop.close()
+    
+    def _fetch_list_of_objects_from_loop():
 
-    df = pd.DataFrame([(i.__dict__) for i in data_list])
+        coro = _get_country()
+        task = asyncio.ensure_future(coro)
+        loop = asyncio.get_event_loop()
+        data_list = loop.run_until_complete(task)
+        loop.close()
+        return data_list 
 
-    df['iso3'] = pd.DataFrame([i.info.iso3 for i in data_list])
+    def _get_df_from_objects(_list):
+        df = pd.DataFrame([(i.__dict__) for i in _list])
+        return df    
 
-    df2 = pd.read_csv('data/all_countries_by_continent.csv')
-    df2.columns = df2.columns = [i.lower() for i in df2.columns.values]
+    def _get_values_from_nested_obj_in_list(_list, col, subcol):
+        df = pd.DataFrame([getattr(getattr(i,col), subcol) for i in _list])
+        return df 
 
-    df = pd.merge(df, df2, left_on='iso3', right_on='iso-alpha3 code', how='outer')
-    country_is_null_in_df2 = df[pd.isnull(df['country or area'])]['name']
-    country_is_null_in_df = df[pd.isnull(df['name'])]['country or area']
+    def _import_clean_country_data():
 
-    df = df.dropna(how='any', subset= ['name', 'country or area'])
+        df = pd.read_csv('data/all_countries_by_continent.csv')
+        df.columns = df.columns = [i.lower() for i in df.columns.values]
+        
+        return df 
 
-    df = df.loc[df['cases'] >= 5000]
-    # make other countries below 5000 cases other, sorted by continent
-    df = df.loc[:, ['continent','name', 'active', 'recoveries','deaths']]
+    def _merge_by_iso3_outer(df, df2):
+
+        df = pd.merge(df, df2, left_on='iso3', right_on='iso-alpha3 code', how='outer')
+        
+        null_df = df[pd.isnull(df['name'])]['country or area']
+        null_df2 = df[pd.isnull(df['country or area'])]['name']
+
+        df = df.dropna(how='any', subset= ['name', 'country or area'])
+
+        return df, null_df, null_df2
+
+    def _filter_by_total_amount_of_cases(df):
+        # filter amount of cases and group everything below threshold and name it other for each continent
+        # check the for a minimum gap and bin the values to other. 
+        # make other countries below 5000  cases other, sorted by continent
+        # For all other countries sum the total of all contries, name them other within each continent
+       
+        def _get_max_gaps_per_continent(df):
+            
+            _diff = df.groupby(['continent','cases','name']).sum()
+            _diff.sort_values('cases')
+            _diff = _diff.reset_index(level=1)
+            _diff = _diff.diff()
+           
+            _max = _diff.groupby('continent').max()
+            _max = _max.loc[:, 'cases']
+
+            return _max   
+
+        _max = _get_max_gaps_per_continent(df)
+
+        _list = [i for i in df.groupby('continent')]
+        result = pd.DataFrame()
+        
+        for i, c in _list:
+
+            _int = _max[i]
+
+            _df = c[c['cases'] >= _int]
+            _rest = c[c['cases'] < _int]
+
+            _rest = _rest.groupby('continent').sum().reset_index()
+
+            _df = _df.append(_rest, ignore_index = True)
+
+            result = result.append(_df, ignore_index = True)
+        
+        for i, c in result.iterrows():
+            if pd.isna(c['name']):
+                result.loc[result.index[i], 'name'] = c['continent'] + '_other'   
+     
+        return result
+
+    def _get_columns_of_interest(*col_names): 
+        nonlocal df 
+
+        _list = []
+        for name in col_names: 
+            _list.append(name)
+    
+        _df = df.loc[:, _list]
+
+        return _df
+
+#######################
+
+    data_list = _fetch_list_of_objects_from_loop()
+
+    df = _get_df_from_objects(data_list)
+
+    df['iso3'] = _get_values_from_nested_obj_in_list(data_list, 'info', 'iso3')
+    
+    df2 = _import_clean_country_data()
+    
+    df, null_first, null_second = _merge_by_iso3_outer(df, df2)
+    
+    df = _filter_by_total_amount_of_cases(df)
+    
+    df = _get_columns_of_interest('continent','name', 'active', 'recoveries','deaths')
 
     sunburst = df.melt(id_vars=(['continent', 'name']))
 
     fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='value')
-    fig.update_layout(title='Countries over 5000 cases')
+    
+    fig.update_layout(title='Countries sorted by continents')
+    
+    return fig
+
+
+## Scrapped functions but still works 
+
+def px_plot_hist(df, amount = 10000):
+
+    today = dt.date.today() 
+    today = today.strftime("%-m/%-d/%y")
+    
+    cases = df[(df['date'] == today) & (df['type'] == 'active')]
+    deaths = df[(df['date'] == today) & (df['type'] == 'deaths')]
+    
+    if (cases['value'].count() < 10):
+        yesterday = dt.date.today() - dt.timedelta(days=1)
+        yesterday = yesterday.strftime("%-m/%-d/%y")
+        cases = df[(df['date'] == yesterday) & (df['type'] == 'cases')]
+        deaths = df[(df['date'] == yesterday) & (df['type'] == 'deaths')]
+
+    
+    cases = cases[cases['value'] >= amount]
+    deaths = deaths[deaths['country'].isin(cases['country'])]
+
+    fig = px.bar(cases, x='country', y='value', title = 'All countries with over {} cases'.format(amount))
+
+    fig.add_trace(go.Bar(x=deaths.country, y=deaths.value, name = 'Deaths'))
+
+    fig.update_layout({
+        'barmode': 'overlay',
+        'bargap': 0.1,
+        })
+
     return fig
