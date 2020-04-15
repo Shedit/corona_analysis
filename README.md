@@ -1,4 +1,4 @@
-# Corona Virus lve updates. 
+# Corona Virus Dashboard. 
 
 ## Intro
 
