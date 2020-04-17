@@ -24,7 +24,7 @@ class calls():
 
     def all(self):
 
-        URL = self.URL_v1 + "/all"
+        URL = self.URL + "/all"
         r = requests.get(url = URL)
         return r.json()
 

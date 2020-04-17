@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output, ClientsideFunction
 import dash_bootstrap_components as dbc
 import datetime as dt
 import time
-
+import math
 
 from graph_functions import * 
 from cleaning_functions import *
@@ -43,6 +43,7 @@ def data_imports():
 
 data_imports()
 
+
 app = dash.Dash(
     __name__,
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
@@ -71,6 +72,15 @@ sun_style = {
             'paper_bgcolor': colors['sun'],
             'font': {'color': colors['text']}
             }
+
+def _get_label_dict(bins = 3): 
+    global df_jhopkins 
+ 
+    length = df_jhopkins.iloc[:,0].count()
+    steps = math.floor(length/bins)
+    _list = [math.floor((steps*i)/2) for i in range(1,bins+1)]
+
+    return _list 
 
 app.layout = \
 dbc.Container(
@@ -106,7 +116,7 @@ dbc.Container(
                                 
                             ), color = 'secondary'
                         )
-                    for i, j in total_stats.items() if i not in ['updated', 'deathsPerOneMillion', 'deathsPerOneMillion', 'casesPerOneMillion', 'testsPerOneMillion']],
+                    for i, j in total_stats.items() if i not in ['updated', 'deathsPerOneMillion', 'deathsPerOneMillion', 'casesPerOneMillion', 'testsPerOneMillion', 'continent']],
                     )    
                 )
             ),
@@ -133,9 +143,17 @@ dbc.Container(
 ##################################################### LOG-TREND-GRAPH 
             html.Div(children= [
                 dcc.Graph(
-                    id='log-trend',
-                    figure= log_trend_all(df_hist, 15).update_layout(graph_style, showlegend = False)
+                    id='log-plot-all',
+                    figure= log_trend_all(df_hist, _get_label_dict()[0]).update_layout(graph_style, showlegend = False)
                 ),
+                dcc.
+                RadioItems(
+                    id="radio-log",
+                    options = [{'label': str(i), 'value': i } \
+                            for i in _get_label_dict()],
+                    value = _get_label_dict()[0], 
+                )
+                
             ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
                 html.Div(children=[
@@ -207,6 +225,11 @@ def update_output_div(input_value):
 def update_output_div(input_value):
     return px_line_plot_ratio(df_hist, input_value).update_layout(graph_style)
 
+@app.callback(
+    Output('log-plot-all', 'figure'),
+    [Input('radio-log', 'value')])
+def update_log_trend(input_value):
+    return log_trend_all(df_hist, input_value).update_layout(graph_style, showlegend = False)
 # Run the server
 if __name__ == "__main__":
     app.run_server(debug=False)

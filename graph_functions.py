@@ -136,50 +136,82 @@ def get_growth_ratio(df, country = ''):
 
     return df
 
-def log_trend_all(df, toplimit = 100):
-    test = df.loc[df['type'] == 'cases']
+def log_trend_all(df, toplimit = 50):
+    
+    def _filter_by_cases(df):
+        _df = df.loc[df['type']== 'cases']
+        return _df
+    
+    cases = _filter_by_cases(df)
 
-    test.loc[:, 'newCases'] = test.groupby('country')['value'].diff()
+    def _get_new_cases(df):
+        _df = df
+        _df.loc[:,'newCases'] = df.groupby('country')['value'].diff()
+        return _df
+    
+    cases = _get_new_cases(cases)
 
-    # Getting largest values 
-    grouped_test = test.groupby('country')
+    def _sort_by_largest_amount_cases(df, _int = 50): 
 
-    # Get the latest value from date for each country 
-    a_list = [i[1].loc[i[1].loc[:, 'date'] == (dt.datetime.today() - dt.timedelta(days=1)).strftime("%-m/%-d/%y")] for i in grouped_test]
+        #1. Get latest value for each country and return a dataframe 
+        def _get_latest_values():
+            nonlocal df 
 
-    testdf = pd.DataFrame()
+            _df = df.groupby('country')
 
-    for i in a_list:
-        testdf = testdf.append(i)
+            _date_str = (dt.datetime.today() - dt.timedelta(days=1)).strftime("%-m/%-d/%y")
+            _list = [country[1].loc[(country[1].loc[:, 'date'] == _date_str)] for country in _df]
 
-    #Saving the names of the countires of the largest amount of cases
+            _df = pd.DataFrame()
 
-    largest_cases_array = testdf.nlargest(toplimit, ['value']).loc[:, 'country'].values
+            for obj in _list:
+                _df = _df.append(obj)
+            
+            return _df
+
+        #2. filter out the nlargest countries and return an array 
+        def _filter_top_cases_return_array(df):
+            nonlocal _int
+
+            _array = df.nlargest(_int, ['value']).loc[:, 'country'].values
+
+            return _array   
+
+        _df = _get_latest_values()
+        top_countries = _filter_top_cases_return_array(_df)
+
+        #3. Get the DataFrame with all countries in top_countires 
+        _df = df.loc[df.loc[:, 'country'].isin(top_countries)]
+
+        return _df
 
     # Getting countries with the largest amount of cases 
-    plot_df = test.loc[test.loc[:, 'country'].isin(largest_cases_array)]
+    top_cases = _sort_by_largest_amount_cases(cases, toplimit)
 
     # Getting all grouped dataframes 
+    def _smooth_values(df):
 
-    b_list = [i for i in plot_df.groupby('country')]
+        _list = [i for i in df.groupby('country')]
 
-    newdf = pd.DataFrame()
+        _df = pd.DataFrame()
 
-    for i, df in b_list:
-        df = df.reset_index(drop = True)
-        val = df.loc[df.index[1], 'newCases'] - df.loc[df.index[0], 'newCases']
-        df.loc[:, 'newCases'] = df.loc[:, 'newCases'].rolling(window=5).mean()
-        df = df.fillna(val)
+        for i, df in _list:
+            df = df.reset_index(drop = True)
+            val = df.loc[df.index[1], 'newCases'] - df.loc[df.index[0], 'newCases']
+            df.loc[:, 'newCases'] = df.loc[:, 'newCases'].rolling(window=5).mean()
+            df = df.fillna(val)
 
-        newdf = newdf.append(df)
+            _df = _df.append(df)
 
-    newdf = newdf.reset_index(drop = True)
+        _df = _df.reset_index(drop = True)
+    
+        return _df 
 
-    #fig = px.line(newdf, x='value', y='newCases', color='continent', log_x= True, log_y= True, hover_name='country')
+    result = _smooth_values(top_cases)
 
     fig = go.Figure()
 
-    for data in newdf.groupby('country'):
+    for data in result.groupby('country'):
         fig.add_trace(
             go.Scatter(
                 x=data[1].value, y=data[1].newCases, mode='lines', line= {'width': 1, 'shape': 'spline'}, name=data[1].country.unique()[0]
