@@ -136,21 +136,17 @@ def get_growth_ratio(df, country = ''):
 
     return df
 
-def log_trend_all(df, toplimit = 50):
+def log_trend_all(df, toplimit = 50, _type = 'cases'):
     
-    def _filter_by_cases(df):
-        _df = df.loc[df['type']== 'cases']
+    def _filter_by_type(df, _type):
+        _df = df.loc[df['type'] == _type]
         return _df
     
-    cases = _filter_by_cases(df)
-
     def _get_new_cases(df):
         _df = df
         _df.loc[:,'newCases'] = df.groupby('country')['value'].diff()
         return _df
-    
-    cases = _get_new_cases(cases)
-
+        
     def _sort_by_largest_amount_cases(df, _int = 50): 
 
         #1. Get latest value for each country and return a dataframe 
@@ -185,12 +181,8 @@ def log_trend_all(df, toplimit = 50):
 
         return _df
 
-    # Getting countries with the largest amount of cases 
-    top_cases = _sort_by_largest_amount_cases(cases, toplimit)
-
-    # Getting all grouped dataframes 
     def _smooth_values(df):
-
+        # Getting all grouped dataframes 
         _list = [i for i in df.groupby('country')]
 
         _df = pd.DataFrame()
@@ -207,6 +199,9 @@ def log_trend_all(df, toplimit = 50):
     
         return _df 
 
+    cases = _filter_by_type(df, _type)
+    cases = _get_new_cases(cases)
+    top_cases = _sort_by_largest_amount_cases(cases, toplimit)
     result = _smooth_values(top_cases)
 
     fig = go.Figure()
@@ -327,23 +322,18 @@ def sunburst_plot():
 #######################
 
     data_list = _fetch_list_of_objects_from_loop()
-
     df = _get_df_from_objects(data_list)
-
     df['iso3'] = _get_values_from_nested_obj_in_list(data_list, 'info', 'iso3')
     
     df2 = _import_clean_country_data()
     
     df, null_first, null_second = _merge_by_iso3_outer(df, df2)
-    
     df = _filter_by_total_amount_of_cases(df)
-    
     df = _get_columns_of_interest('continent','name', 'active', 'recoveries','deaths')
 
     sunburst = df.melt(id_vars=(['continent', 'name']))
 
     fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='value')
-    
     fig.update_layout(title='Countries sorted by continents')
     
     return fig

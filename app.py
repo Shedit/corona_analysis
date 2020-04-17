@@ -144,7 +144,7 @@ dbc.Container(
             html.Div(children= [
                 dcc.Graph(
                     id='log-plot-all',
-                    figure= log_trend_all(df_hist, _get_label_dict()[0]).update_layout(graph_style, showlegend = False)
+                    figure= log_trend_all(df_hist, _get_label_dict()[0], 'cases').update_layout(graph_style, showlegend = False)
                 ),
                 dcc.
                 RadioItems(
@@ -152,7 +152,15 @@ dbc.Container(
                     options = [{'label': str(i), 'value': i } \
                             for i in _get_label_dict()],
                     value = _get_label_dict()[0], 
-                )
+                ),
+                dcc.
+                RadioItems(
+                    id="radio-log-type",
+                    options = [{'label': 'Cases', 'value': 'cases'},
+                               {'label': 'Deaths', 'value': 'deaths'},
+                               {'label': 'Recovered', 'value': 'recovered'}],
+                    value = 'cases', 
+                )                
                 
             ]),
 ##################################################### LINE-GRAPHS WITH DROPDOWN MENU
@@ -227,9 +235,10 @@ def update_output_div(input_value):
 
 @app.callback(
     Output('log-plot-all', 'figure'),
-    [Input('radio-log', 'value')])
-def update_log_trend(input_value):
-    return log_trend_all(df_hist, input_value).update_layout(graph_style, showlegend = False)
+    [Input('radio-log', 'value'),
+    Input('radio-log-type', 'value')])
+def update_log_trend(log_value, log_type_value):
+    return log_trend_all(df_hist, log_value, log_type_value).update_layout(graph_style, showlegend = False)
 # Run the server
 if __name__ == "__main__":
     app.run_server(debug=False)
