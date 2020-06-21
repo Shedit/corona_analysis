@@ -13,14 +13,14 @@ class calls():
         
         if country == '':  
             r = requests.get(url = URL, params = {'lastdays': str(lastdays)})
-            return r.text
+            return r.json()
 
         else:
             # Because params in r.get delimit with '?' instead and REST api does not accept '?' only '/'
             PATH = os.path.join (URL, country)
             r = requests.get(url = PATH, params={'lastdays': str(lastdays)})
             print('historical:' + r.url)
-            return r.text
+            return r.json()
 
     def all(self):
 

@@ -30,7 +30,7 @@ def px_line_plot_ratio(df, country):
 
     df = get_growth_ratio(df, country = country)
   
-    growth_today = df['ratio'].tail(1).values 
+    growth_today = df.loc[:, 'ratio'].tail(1).values 
     
     fig = go.Figure(
         layout=go.Layout(
@@ -55,11 +55,11 @@ def px_plot_hist_jhop(df, amount = 10000):
 
     ## Inner helper functions
 
-    def _get_df_by_type(_type):
+    def _get_df_by_type(type_):
     
         nonlocal df 
 
-        _df = df[(df['type'] == _type)]
+        _df = df[(df['type'] == type_)]
         
         return _df 
 
@@ -93,7 +93,7 @@ def px_plot_hist_jhop(df, amount = 10000):
     
     cases, deaths, recovered = _sort_by_amount_cases(amount)
 
-    cases['active_cases'] = cases['value'].values - (deaths['value'].values + recovered['value'].values)
+    cases.loc[:, 'active_cases'] = cases['value'].values - (deaths['value'].values + recovered['value'].values)
     
     fig = go.Figure()
     
@@ -118,28 +118,28 @@ def get_growth_ratio(df, country = ''):
         df = df[(df['type'] == 'cases') & (df['country'] == country)]
         df = df.reset_index(drop = True)
 
-    df['past'] = df['value']
+    df.loc[:, 'past'] = df['value']
 
-    for i, c in df.iterrows():
+    for i, c in enumerate(df.itertuples()):
         
         if( i == max(df.index)):
             pass
         else:     
-            df.loc[df.index[i+1],'past'] = c['past']
+            df.loc[df.index[i+1],'past'] = c[-1]
 
-    df['diff'] = df['value'] - df['past']
+    df.loc[:, 'diff'] = df.loc[:,'value'].values - df.loc[:, 'past'].values
 
-    df['ratio'] = df['diff'] / df['past']
+    df.loc[:, 'ratio'] = df.loc[:, 'diff'].values / df.loc[:, 'past'].values
 
-    df['ratio'] = df['ratio'].fillna(0)
-    df['ratio'] = df['ratio'].replace(np.inf, 1)
-
+    df.loc[:, 'ratio'] = df.loc[:, 'ratio'].fillna(0)
+    df.loc[:, 'ratio'] = df.loc[:, 'ratio'].replace(np.inf, 1)
+    
     return df
 
-def log_trend_all(df, toplimit = 50, _type = 'cases'):
+def log_trend_all(df, toplimit = 50, type_ = 'cases'):
     
-    def _filter_by_type(df, _type):
-        _df = df.loc[df['type'] == _type]
+    def _filter_by_type(df, type_):
+        _df = df.loc[df['type'] == type_]
         return _df
     
     def _get_new_cases(df):
@@ -183,11 +183,11 @@ def log_trend_all(df, toplimit = 50, _type = 'cases'):
 
     def _smooth_values(df):
         # Getting all grouped dataframes 
-        _list = [i for i in df.groupby('country')]
+        _gen = (i for i in df.groupby('country'))
 
         _df = pd.DataFrame()
 
-        for i, df in _list:
+        for _, df in _gen:
             df = df.reset_index(drop = True)
             val = df.loc[df.index[1], 'newCases'] - df.loc[df.index[0], 'newCases']
             df.loc[:, 'newCases'] = df.loc[:, 'newCases'].rolling(window=5).mean()
@@ -199,7 +199,7 @@ def log_trend_all(df, toplimit = 50, _type = 'cases'):
     
         return _df 
 
-    cases = _filter_by_type(df, _type)
+    cases = _filter_by_type(df, type_)
     cases = _get_new_cases(cases)
     top_cases = _sort_by_largest_amount_cases(cases, toplimit)
     result = _smooth_values(top_cases)
@@ -325,9 +325,10 @@ def sunburst_plot():
     df = _get_df_from_objects(data_list)
     df['iso3'] = _get_values_from_nested_obj_in_list(data_list, 'info', 'iso3')
     
-    df2 = _import_clean_country_data()
     
-    df, null_first, null_second = _merge_by_iso3_outer(df, df2)
+    #df2 = _import_clean_country_data()
+    
+    #df, null_first, null_second = _merge_by_iso3_outer(df, df2)
     df = _filter_by_total_amount_of_cases(df)
     df = _get_columns_of_interest('continent','name', 'active', 'recoveries','deaths')
 
@@ -337,7 +338,6 @@ def sunburst_plot():
     fig.update_layout(title='Countries sorted by continents')
     
     return fig
-
 
 ## Scrapped functions but still works 
 

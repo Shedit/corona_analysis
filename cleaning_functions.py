@@ -1,21 +1,31 @@
 import numpy as np 
 import pandas as pd 
-
+import pprint as pp
 def tidy_historical(data):
-
     data = add_country_data(data)
     data = column_merge_country_province(data)
     data = data.set_index('countryANDprovince')
-    data.columns = ['timeline', 'country_or_area', 'iso-alpha3 code',
+    data.columns = ['timeline.cases', 'timeline.deaths', 'timeline.recovered', 'country_or_area', 'iso-alpha3 code',
        'm49 code', 'region 1', 'region 2', 'continent']
 
-    b_list = [(k,i,j,m, data.loc[k,'country_or_area'], data.loc[k,'continent']) for k in data.index \
-             for i in data.loc[k, 'timeline'].keys() \
-             for j, m in data.loc[k, 'timeline'][i].items()]
-    
-    
+    cases_unpack_list = ((k,'cases', i[0], i[1],data.loc[k,'country_or_area'], data.loc[k,'continent']) for k in data.index \
+              for i in data.loc[k, 'timeline.cases'].items())
+    deaths_unpack_list = ((k,'deaths', i[0], i[1], data.loc[k,'country_or_area'], data.loc[k,'continent']) for k in data.index \
+              for i in data.loc[k, 'timeline.deaths'].items())
+    recovered_unpack_list = ((k,'recovered', i[0], i[1], data.loc[k,'country_or_area'], data.loc[k,'continent']) for k in data.index \
+              for i in data.loc[k, 'timeline.recovered'].items())    
+
+    b_list = []
+
+    for i in cases_unpack_list:
+        b_list.append(i)
+    for i in deaths_unpack_list:
+        b_list.append(i)
+    for i in recovered_unpack_list:
+        b_list.append(i)
+
     df_tidy = pd.DataFrame(b_list, columns = ['country', 'type', 'date', 'value', 'country_or_area', 'continent'])
-    
+    df_tidy['value'] = df_tidy['value'].astype(int) 
     return df_tidy
 
 def tidy_stats_jhopkins(data):
@@ -46,6 +56,7 @@ def column_merge_country_province(data):
 
     del data['country']
     del data['province']
+    # set new col first 
 
     b_list = []
     b_list.append(data.columns[-1])
@@ -53,6 +64,7 @@ def column_merge_country_province(data):
         b_list.append(i)
 
     data = data[b_list]
+
     return data 
 
 def add_country_data(df):
@@ -60,7 +72,8 @@ def add_country_data(df):
     df2 = pd.read_csv('data/all_countries_by_continent.csv')
     df2.columns = [i.lower() for i in df2.columns.values]
     merged = pd.merge(df, df2, left_on= 'country', right_on='country or area')
-    merged = merged.dropna(how='any', subset=['timeline'])
+    merged = merged.dropna(how='any', subset=['timeline.cases', 'timeline.deaths', 'timeline.recovered'])
+
     return merged
 
 def count_sum_of_nested_dicts(df, col, nestkey):

@@ -38,15 +38,15 @@ print('null in df:', country_is_null_in_df)
 print('nul in df2:', country_is_null_in_df2)
 print(df.columns)
 
-print(df.loc[pd.isnull(df['continent'])])
+print(df.loc[pd.isnull(df['continent_x'])])
 
-df = df.loc[:, ['continent','name', 'active', 'recoveries','deaths']]
+df = df.loc[:, ['continent_x','name', 'active', 'recoveries','deaths']]
 
-sunburst = df.melt(id_vars=(['continent', 'name']))
+sunburst = df.melt(id_vars=(['continent_x', 'name']))
 
 import plotly.express as px 
 
-fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='value')
+fig = px.sunburst(sunburst, path=['continent_x', 'name', 'variable'], values='value')
 
 
 
@@ -55,8 +55,8 @@ fig = px.sunburst(sunburst, path=['continent', 'name', 'variable'], values='valu
 
 ### Getting ID-list for sunburst continents -> continents_name -> continents_name_variable 
 ids = []
-ids.append(list(sunburst.continent.unique()))
-ids.append(list((sunburst.continent + '_' + sunburst.name).unique()))
+ids.append(list(sunburst.continent_x.unique()))
+ids.append(list((sunburst.continent_x+ '_' + sunburst.name).unique()))
 ids.append(list(sunburst.name + '_' + sunburst.variable))
 # merge continent, name and variable together
 
@@ -71,7 +71,7 @@ print(len(flat_ids))
 #labels continents -> name -> variable 
 
 labels = []
-labels.append(list(sunburst.continent.unique()))
+labels.append(list(sunburst.continent_x.unique()))
 labels.append(list(sunburst.name.unique()))
 labels.append(list(sunburst.variable))
 
@@ -84,9 +84,9 @@ print('labels: {}'.format(len(labels)), 'ids: {}'.format(len(ids)))
 ###parents = "" "" "" for all continents, + continents for all names
 
 parents = []
-parents.append(["" for i in sunburst.continent.unique()])
-parents.append(list((sunburst.continent + '_' + sunburst.name).unique()))
-parents.append(list(sunburst.continent + '_' + sunburst.name))
+parents.append(["" for i in sunburst.continent_x.unique()])
+parents.append(list((sunburst.continent_x + '_' + sunburst.name).unique()))
+parents.append(list(sunburst.continent_x + '_' + sunburst.name))
 
 flat_parents= list(itertools.chain.from_iterable(parents))
 
@@ -97,9 +97,9 @@ print('parents: {}'.format(len(parents)),'labels: {}'.format(len(labels)), 'ids:
 
 ## 
 
-grouped_sun_by_continent = sunburst.groupby('continent').sum()
+grouped_sun_by_continent = sunburst.groupby('continent_x').sum()
 grouped_sun_by_name = sunburst.groupby('name').sum()
-grouped_sun_by_continent_name_variable = sunburst.groupby(['continent', 'name','variable']).sum()
+grouped_sun_by_continent_name_variable = sunburst.groupby(['continent_x', 'name','variable']).sum()
 values = []
 values.append(list(grouped_sun_by_continent['value']))
 values.append(list(grouped_sun_by_name['value']))

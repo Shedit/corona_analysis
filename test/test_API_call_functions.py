@@ -21,7 +21,7 @@ class test_calls_class(unittest.TestCase):
         data = self.calls_object.historical(country = 'sweden')
        
         self.assertIs(type(data), type(''))
-        self.assertIn('sweden', data)
+        self.assertIn('Sweden', data)
     
     def test_calls_all_works(self):
         # Check if the call methodfor all works by checking if the return is an dict object.

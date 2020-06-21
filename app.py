@@ -32,7 +32,7 @@ def data_imports():
     global df_jhopkins
 
     data_hist_json = API.historical()
-    df_hist = pd.read_json(data_hist_json)
+    df_hist = pd.DataFrame(pd.json_normalize(data_hist_json, max_level=1))
     df_hist = tidy_historical(df_hist)
 
     data_jhopkins_json = API.jhopkins()
@@ -130,7 +130,7 @@ dbc.Container(
             html.Div(children= [
                 dcc.Graph(
                     id='hist-tot-cases-by-country',
-                    figure=px_plot_hist_jhop(tidy_stats_jhop).update_layout(graph_style)
+                    figure=  px_plot_hist_jhop(tidy_stats_jhop).update_layout(graph_style)
                 ),
 
                 dcc.RadioItems(
@@ -241,5 +241,5 @@ def update_log_trend(log_value, log_type_value):
     return log_trend_all(df_hist, log_value, log_type_value).update_layout(graph_style, showlegend = False)
 # Run the server
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
 
