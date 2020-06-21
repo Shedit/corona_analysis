@@ -11,3 +11,11 @@ This is an application that automatically gets updates about covid-19
 - Automate it. 
 
 In the end the purpose is to learn about Dash environment, python as well as API requests. 
+
+
+## 
+
+Current Live link: 
+
+https://mysterious-taiga-71250.herokuapp.com/
+
